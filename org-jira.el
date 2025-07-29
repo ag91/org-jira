@@ -1854,8 +1854,14 @@ that should be bound to an issue."
           (equal summary ""))
       (error "Must provide all information!"))
   (let* ((parent-id nil)
-         (ticket-struct (org-jira-get-issue-struct project type summary description)))
-    (org-jira-get-issues (list (jiralib-create-issue ticket-struct)))))
+         (ticket-struct (org-jira-get-issue-struct project type summary description))
+         (issue (jiralib-create-issue ticket-struct)))
+    (when (yes-or-no-p "Do you want to add issue to latest sprint?")
+      (let ((sprints (alist-get 'values (jiralib-get-board-sprints (alist-get 'id (car (jiralib-get-project-boards project))))))
+            (last-sprint (aref sprints (- (length sprints) 1))))
+        (jiralib-assign-issue-to-sprint (alist-get 'id issue)
+                                        (alist-get 'id last-sprint))))
+    (org-jira-get-issues (list issue))))
 
 ;;;###autoload
 (defun org-jira-create-subtask (project type summary description)

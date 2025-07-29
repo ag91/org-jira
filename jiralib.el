@@ -331,7 +331,7 @@ This produces a noticeable slowdown and is not recommended by
 request.el, so if at all possible, it should be avoided."
   ;; @TODO :auth: Probably pass this all the way down, but I think
   ;; it may be OK at the moment to just set the variable each time.
-  
+
   (setq jiralib-complete-callback
         ;; Don't run with async if we don't have a login token yet.
         (if jiralib-token callback nil))
@@ -359,86 +359,91 @@ request.el, so if at all possible, it should be avoided."
       ('getIssueTypes (jiralib--rest-call-it "/rest/api/2/issuetype"))
       ('getSubTaskIssueTypes (jiralib--rest-call-it "/rest/api/2/issuetype"))
       ('getIssueTypesByProject
-       (let ((response (jiralib--rest-call-it (format "/rest/api/2/project/%s" (first params)))))
+       (let ((response (jiralib--rest-call-it (format "/rest/api/2/project/%s" (nth 0 params)))))
          (cl-coerce (cdr (assoc 'issueTypes response)) 'list)))
-      ('getUser (jiralib--rest-call-it "/rest/api/2/user" :params `((accountId . ,(first params)))))
-      ('getVersions (jiralib--rest-call-it (format "/rest/api/2/project/%s/versions" (first params))))
+      ('getUser (jiralib--rest-call-it "/rest/api/2/user" :params `((accountId . ,(nth 0 params)))))
+      ('getVersions (jiralib--rest-call-it (format "/rest/api/2/project/%s/versions" (nth 0 params))))
 
       ;; Worklog calls
       ('getWorklogs
-       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (first params))))
+       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (nth 0 params))))
 
       ('addWorklog
-       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (first params))
+       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (nth 0 params))
                               :type "POST"
-                              :data (json-encode (second params))))
+                              :data (json-encode (nth 1 params))))
 
       ('updateWorklog
-       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog/%s" (first params) (second params))
+       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog/%s" (nth 0 params) (nth 1 params))
                               :type "PUT"
                               :data (json-encode (third params))))
 
       ('addWorklogAndAutoAdjustRemainingEstimate
-       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (first params))
+       (jiralib--rest-call-it (format "/rest/api/2/issue/%s/worklog" (nth 0 params))
                               :type "POST"
-                              :data (json-encode (second params))))
+                              :data (json-encode (nth 1 params))))
 
       ('addComment (jiralib--rest-call-it
-                    (format "/rest/api/2/issue/%s/comment" (first params))
+                    (format "/rest/api/2/issue/%s/comment" (nth 0 params))
                     :type "POST"
-                    :data (json-encode (second params))))
+                    :data (json-encode (nth 1 params))))
       ('createIssue
        ;; Creating the issue doesn't return it, a second call must be
        ;; made to pull it in by using the self key in response.
        (let ((response (jiralib--rest-call-it
                         "/rest/api/2/issue"
                         :type "POST"
-                        :data (json-encode (first params)))))
+                        :data (json-encode (nth 0 params)))))
          (jiralib--rest-call-it (cdr (assoc 'self response)) :type "GET")
          ))
       ('createIssueWithParent
        (let ((response (jiralib--rest-call-it
                         "/rest/api/2/issue"
                         :type "POST"
-                        :data (json-encode (first params)))))
+                        :data (json-encode (nth 0 params)))))
          (jiralib--rest-call-it (cdr (assoc 'self response)) :type "GET")
          ))
       ('editComment (jiralib--rest-call-it
-                     (format "/rest/api/2/issue/%s/comment/%s" (first params) (second params))
+                     (format "/rest/api/2/issue/%s/comment/%s" (nth 0 params) (nth 1 params))
                      :data (json-encode `((body . ,(third params))))
                      :type "PUT"))
-      ('getBoard  (jiralib--rest-call-it (format "/rest/agile/1.0/board/%s"  (first params))))
+      ('getBoard  (jiralib--rest-call-it (format "/rest/agile/1.0/board/%s"  (nth 0 params))))
       ('getBoards (apply 'jiralib--agile-call-it "/rest/agile/1.0/board" 'values params))
       ('getComment (org-jira-find-value
-                     (jiralib--rest-call-it
-                      (format "/rest/api/2/issue/%s/comment/%s" (first params) (second params)))
-                     'comments))
+                    (jiralib--rest-call-it
+                     (format "/rest/api/2/issue/%s/comment/%s" (nth 0 params) (nth 1 params)))
+                    'comments))
       ('getComments (org-jira-find-value
                      (jiralib--rest-call-it
-                      (format "/rest/api/2/issue/%s/comment" (first params)))
+                      (format "/rest/api/2/issue/%s/comment" (nth 0 params)))
                      'comments))
       ('getAttachmentsFromIssue (org-jira-find-value
                                  (jiralib--rest-call-it
-                                  (format "/rest/api/2/issue/%s?fields=attachment" (first params)))
+                                  (format "/rest/api/2/issue/%s?fields=attachment" (nth 0 params)))
                                  'comments))
       ('getComponents (jiralib--rest-call-it
-                       (format "/rest/api/2/project/%s/components" (first params))))
+                       (format "/rest/api/2/project/%s/components" (nth 0 params))))
       ('getIssue (jiralib--rest-call-it
-                  (format "/rest/api/2/issue/%s" (first params))))
+                  (format "/rest/api/2/issue/%s" (nth 0 params))))
       ('getIssuesFromBoard  (apply 'jiralib--agile-call-it
-				   (format "rest/agile/1.0/board/%d/issue" (first params))
+				   (format "rest/agile/1.0/board/%d/issue" (nth 0 params))
 				   'issues
 				   (cdr params)))
-      ('getSprintsFromBoard  (jiralib--rest-call-it (format "/rest/agile/1.0/board/%s/sprint"  (first params))))
+      ('getSprintsFromBoard  (jiralib--rest-call-it (format "/rest/agile/1.0/board/%s/sprint"  (nth 0 params))))
       ('getIssuesFromSprint  (apply 'jiralib--agile-call-it
-				   (format "rest/agile/1.0/sprint/%d/issue" (first params))
-				   'issues
-				   (cdr params)))
+				    (format "rest/agile/1.0/sprint/%d/issue" (nth 0 params))
+				    'issues
+				    (cdr params)))
+      ('assignIssuesToSprint  (append (cdr ( assoc 'issues (jiralib--rest-call-it
+                                                            (format "rest/agile/1.0/sprint/%d/issue" (nth 0 params))
+                                                            :type "POST"
+                                                            :data (json-encode `((issues . ,(nth 1 params)))))))
+                                      nil))
       ('getIssuesFromJqlSearch  (append (cdr ( assoc 'issues (jiralib--rest-call-it
                                                               "/rest/api/2/search"
                                                               :type "POST"
-                                                              :data (json-encode `((jql . ,(first params))
-                                                                                   (maxResults . ,(second params)))))))
+                                                              :data (json-encode `((jql . ,(nth 0 params))
+                                                                                   (maxResults . ,(nth 1 params)))))))
                                         nil))
       ('getPriorities (jiralib--rest-call-it
                        "/rest/api/2/priority"))
@@ -452,22 +457,22 @@ request.el, so if at all possible, it should be avoided."
        (mapcar
         (lambda (trans)
           `(,(assoc 'name trans) ,(assoc 'id trans)))
-        (cdadr (jiralib--rest-call-it (format "/rest/api/2/issue/%s/transitions" (first params))))))
-      ('getFieldsForAction (org-jira-find-value (car (let ((issue (first params))
-                                                           (action (second params)))
+        (cdadr (jiralib--rest-call-it (format "/rest/api/2/issue/%s/transitions" (nth 0 params))))))
+      ('getFieldsForAction (org-jira-find-value (car (let ((issue (nth 0 params))
+                                                           (action (nth 1 params)))
                                                        (seq-filter (lambda (trans)
                                                                      (or (string-equal action (org-jira-find-value trans 'id))
                                                                          (string-equal action (org-jira-find-value trans 'name))))
                                                                    (cdadr (jiralib--rest-call-it
-                                                                           (format "/rest/api/2/issue/%s/transitions" (first params))
+                                                                           (format "/rest/api/2/issue/%s/transitions" (nth 0 params))
                                                                            :params '((expand . "transitions.fields")))))))
                                                 'fields))
       ('progressWorkflowAction (jiralib--rest-call-it
-                                (format "/rest/api/2/issue/%s/transitions" (first params))
+                                (format "/rest/api/2/issue/%s/transitions" (nth 0 params))
                                 :type "POST"
-                                :data (json-encode `(,(car (second params)) ,(car (third params))))))
+                                :data (json-encode `(,(car (nth 1 params)) ,(car (third params))))))
       ('getUsers
-       (let* ((project (first params))
+       (let* ((project (nth 0 params))
               (start-at 0)
               (max-results 1000)
               (all-users '())
@@ -481,10 +486,10 @@ request.el, so if at all possible, it should be avoided."
              (setq start-at (+ start-at max-results))))
          all-users))
       ('updateIssue (jiralib--rest-call-it
-                     (format "/rest/api/2/issue/%s" (first params))
+                     (format "/rest/api/2/issue/%s" (nth 0 params))
                      :type "PUT"
-                     :data (json-encode `((fields . ,(second params))))))
-      ('getLabels (jiralib--rest-call-it (format "/rest/api/2/label?startAt=%s" (first params)))))))
+                     :data (json-encode `((fields . ,(nth 1 params))))))
+      ('getLabels (jiralib--rest-call-it (format "/rest/api/2/label?startAt=%s" (nth 0 params)))))))
 
 (defun jiralib--soap-call-it (&rest args)
   "Deprecated SOAP call endpoint.  Will be removed soon.
@@ -570,10 +575,10 @@ first is normally used."
 
 DATA is a list of association lists (a SOAP array-of type)
 KEY-FIELD is the field to use as the key in the returned alist
-VALUE-FIELD is the field to use as the value in the returned alist"  
+VALUE-FIELD is the field to use as the value in the returned alist"
   (cl-loop for element in data
-        collect (cons (cdr (assoc key-field element))
-                      (cdr (assoc value-field element)))))
+           collect (cons (cdr (assoc key-field element))
+                         (cdr (assoc value-field element)))))
 
 (defun jiralib-make-remote-field-values (fields)
   "Transform the (KEY . VALUE) list FIELDS into a RemoteFieldValue structure.
@@ -1200,6 +1205,10 @@ Auxiliary Notes:
   "Return list of jira boards"
   (jiralib-call "getBoards" nil))
 
+(defun jiralib-get-project-boards (project-id)
+  "Return list of jira boards"
+  (seq-find (lambda (it) (equal (alist-get 'projectKey (alist-get 'location it)) project-id)) (jiralib-get-boards)))
+
 (defun jiralib-get-board-sprints (id)
   "Return list of jira sprints in the specified jira board"
   (jiralib-call "getSprintsFromBoard" nil id))
@@ -1208,6 +1217,15 @@ Auxiliary Notes:
   "Return list of issues in the specified sprint"
   (apply 'jiralib-call "getIssuesFromSprint"
 	 (cl-getf params :callback) id params))
+
+(defun jiralib-assign-issues-to-sprint (issue-ids sprint-id &rest params)
+  "Assign vector of ISSUES-IDS to SPRINT-ID."
+  (apply 'jiralib-call "assignIssuesToSprint"
+	 (cl-getf params :callback) issue-ids sprint-id params))
+
+(defun jiralib-assign-issue-to-sprint (issue-id sprint-id &rest _params)
+  "Assign ISSUES-ID to SPRINT-ID."
+  (jiralib-assign-issue-to-sprint (vector issue-id) sprint-id))
 
 (defun jiralib-get-board-issues (board-id &rest params)
   "Return list of jira issues in the specified jira board"

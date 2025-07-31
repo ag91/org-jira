@@ -1225,7 +1225,7 @@ Auxiliary Notes:
 
 (defun jiralib-assign-issue-to-sprint (issue-id sprint-id &rest _params)
   "Assign ISSUES-ID to SPRINT-ID."
-  (jiralib-assign-issue-to-sprint (vector issue-id) sprint-id))
+  (jiralib-assign-issues-to-sprint sprint-id (vector issue-id)))
 
 (defun jiralib-get-board-issues (board-id &rest params)
   "Return list of jira issues in the specified jira board"

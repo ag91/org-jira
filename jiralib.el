@@ -440,10 +440,11 @@ request.el, so if at all possible, it should be avoided."
                                                             :data (json-encode `((issues . ,(nth 1 params)))))))
                                       nil))
       ('getIssuesFromJqlSearch  (append (cdr ( assoc 'issues (jiralib--rest-call-it
-                                                              "/rest/api/2/search"
-                                                              :type "POST"
-                                                              :data (json-encode `((jql . ,(nth 0 params))
-                                                                                   (maxResults . ,(nth 1 params)))))))
+                                                              "/rest/api/3/search/jql"
+                                                              :type "GET"
+                                                              :params `((jql . ,(nth 0 params))
+                                                                        (maxResults . ,(nth 1 params))
+                                                                        (fields . "*all")))))
                                         nil))
       ('getPriorities (jiralib--rest-call-it
                        "/rest/api/2/priority"))
